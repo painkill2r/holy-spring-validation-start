@@ -17,3 +17,8 @@ Spring Boot를 이용한 Validation 기초 학습
         - Lombok
 4. Build Tools : Gradle
 5. Database : H2
+
+## 참고 링크
+
+1. 검증과 오류 메시지 공식
+   메뉴얼: [https://www.thymeleaf.org/doc/tutorials/3.0/thymeleafspring.html#validation-and-error-messages](https://www.thymeleaf.org/doc/tutorials/3.0/thymeleafspring.html#validation-and-error-messages)
