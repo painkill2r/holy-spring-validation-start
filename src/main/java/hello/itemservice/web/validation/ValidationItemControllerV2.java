@@ -130,8 +130,11 @@ public class ValidationItemControllerV2 {
         return "redirect:/validation/v2/items/{itemId}";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String addItemV3(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+        log.info("objectName={}", bindingResult.getObjectName()); //에러 처리할 객체명(@ModelAttribute name)
+        log.info("target={}", bindingResult.getTarget()); // 에러 처리할 필드 목록
+
         //검증 로직
         if (!StringUtils.hasText(item.getItemName())) {
             //필드 오류: new FieldError("@ModelAttribute 이름", "오류가 발생한 필드명", "실패한 값", "타입 오류 같은 바인딩 실패인지, 검증 실패인지 구분 값", "메시지 코드", "메시지에서 사용하는 인자", "오류 기본 메시지")
@@ -153,6 +156,51 @@ public class ValidationItemControllerV2 {
             if (resultPrice < 10000) {
                 //글로벌 오류: new ObjectError(""@ModelAttribute 이름", "메시지 코드", "메시지에서 사용하는 인자", "오류 기본 메시지")
                 bindingResult.addError(new ObjectError("item", new String[]{"totalPriceMin"}, new Object[]{10000, resultPrice}, null));
+            }
+        }
+
+        //검증에 실패하면 다시 입력폼으로
+        if (bindingResult.hasErrors()) {
+            log.info("errors = {}", bindingResult);
+
+            return "validation/v2/addForm";
+        }
+
+        //성공 로직
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/validation/v2/items/{itemId}";
+    }
+
+    @PostMapping("/add")
+    public String addItemV4(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
+        log.info("objectName={}", bindingResult.getObjectName()); //에러 처리할 객체명(@ModelAttribute name)
+        log.info("target={}", bindingResult.getTarget()); // 에러 처리할 필드 목록
+
+        //검증 로직
+        if (!StringUtils.hasText(item.getItemName())) {
+            //bindingResult.rejectValue("오류가 발생한 필드명", "에러 코드 첫번째 단어[이름 규칙=>에러코드.객체명.필드명]")
+            //bindingResult.rejectValue("오류가 발생한 필드명", "에러 코드 첫번째 단어[이름 규칙=>에러코드.객체명.필드명]", "메시지에서 사용하는 인자", "기본 오류 메시지")
+            bindingResult.rejectValue("itemName", "required");
+        }
+
+        if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+            bindingResult.rejectValue("price", "range", new Object[]{10000, 1000000}, null);
+        }
+
+        if (item.getQuantity() == null || item.getQuantity() > 9999) {
+            bindingResult.rejectValue("quantity", "max", new Object[]{10000}, null);
+        }
+
+        //특정 필드가 아닌 복합 룰 검증
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+
+            if (resultPrice < 10000) {
+                //bindingResult.reject("에러 코드")
+                //bindingResult.reject("에러 코드", "메시지에서 사용하는 인자", "기본 오류 메시지")
+                bindingResult.reject("totalPriceMin", new Object[]{10000, resultPrice}, null);
             }
         }
 
