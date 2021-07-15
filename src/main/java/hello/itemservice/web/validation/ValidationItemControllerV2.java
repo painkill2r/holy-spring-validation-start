@@ -32,12 +32,10 @@ public class ValidationItemControllerV2 {
      *
      * @param dataBinder WebDataBinder는 스프링 파라미터 바인딩의 역할을 해주고, 검증 기능도 내부에 포함함.
      */
-    /*
     @InitBinder
     public void init(WebDataBinder dataBinder) {
         dataBinder.addValidators(itemValidator); //WebDataBinder에 검증기를 추가하면 해당 컨트롤러 호출시 검증기를 자동으로 적용함.
     }
-    */
 
     @GetMapping
     public String items(Model model) {
