@@ -11,6 +11,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.ValidationUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -24,6 +26,16 @@ public class ValidationItemControllerV2 {
 
     private final ItemRepository itemRepository;
     private final ItemValidator itemValidator;
+
+    /**
+     * 해당 컨트롤러가 호출 될 때마다 실행
+     *
+     * @param dataBinder WebDataBinder는 스프링 파라미터 바인딩의 역할을 해주고, 검증 기능도 내부에 포함함.
+     */
+    @InitBinder
+    public void init(WebDataBinder dataBinder) {
+        dataBinder.addValidators(itemValidator); //WebDataBinder에 검증기를 추가하면 해당 컨트롤러 호출시 검증기를 자동으로 적용함.
+    }
 
     @GetMapping
     public String items(Model model) {
@@ -221,11 +233,38 @@ public class ValidationItemControllerV2 {
         return "redirect:/validation/v2/items/{itemId}";
     }
 
-    @PostMapping("/add")
+    //@PostMapping("/add")
     public String addItemV5(@ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
         // 검증 로직
         itemValidator.validate(item, bindingResult);
 
+        //검증에 실패하면 다시 입력폼으로
+        if (bindingResult.hasErrors()) {
+            log.info("errors = {}", bindingResult);
+
+            return "validation/v2/addForm";
+        }
+
+        //성공 로직
+        Item savedItem = itemRepository.save(item);
+        redirectAttributes.addAttribute("itemId", savedItem.getId());
+        redirectAttributes.addAttribute("status", true);
+        return "redirect:/validation/v2/items/{itemId}";
+    }
+
+    /**
+     * 자동으로 검증 로직을 수행하도록 하기 위해 @Validated(검증기를 실행하기 위한 애노테이션) 설정 추가
+     * WebDataBinder에 등록한 검증기를 찾아서 실행함.
+     * 만약, 여러 검증기를 등록한 경우 어떤 검증기가 실행되어야 할지 구분이 필요한데, 이때 supports()가 사용됨.
+     *
+     * @param item
+     * @param bindingResult
+     * @param redirectAttributes
+     * @param model
+     * @return
+     */
+    @PostMapping("/add")
+    public String addItemV6(@Validated @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes, Model model) {
         //검증에 실패하면 다시 입력폼으로
         if (bindingResult.hasErrors()) {
             log.info("errors = {}", bindingResult);
