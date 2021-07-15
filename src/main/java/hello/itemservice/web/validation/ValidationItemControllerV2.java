@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.validation.ValidationUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -179,6 +180,7 @@ public class ValidationItemControllerV2 {
         log.info("target={}", bindingResult.getTarget()); // 에러 처리할 필드 목록
 
         //검증 로직
+        //ValidationUtils.rejectIfEmptyOrWhitespace(bindingResult, "itemName", "required");
         if (!StringUtils.hasText(item.getItemName())) {
             //bindingResult.rejectValue("오류가 발생한 필드명", "에러 코드 첫번째 단어[이름 규칙=>에러코드.객체명.필드명]")
             //bindingResult.rejectValue("오류가 발생한 필드명", "에러 코드 첫번째 단어[이름 규칙=>에러코드.객체명.필드명]", "메시지에서 사용하는 인자", "기본 오류 메시지")
